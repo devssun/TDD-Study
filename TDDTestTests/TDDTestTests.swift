@@ -2,12 +2,56 @@
 //  TDDTestTests.swift
 //  TDDTestTests
 //
-//  Created by 최혜선 on 08/05/2019.
-//  Copyright © 2019 jamie. All rights reserved.
+//  Created by 최혜선 on 15/05/2019.
+//  Copyright © 2019 ulike. All rights reserved.
 //
 
 import XCTest
 @testable import TDDTest
+
+protocol MoneyProtocol {
+    func currency() -> String
+    func times(multiplier: Int) -> Money
+}
+
+public class Money: Equatable {
+    fileprivate var currencyUnit: String = ""
+    fileprivate var amount: Int = 0
+    
+    init(amount: Int, currency: String) {
+        self.amount = amount
+        self.currencyUnit = currency
+    }
+    
+    func equals(_ money: Any) -> Bool {
+        let money = money as! Money
+        return amount == money.amount && currency() == money.currency()
+    }
+    
+    static func dollar(amount: Int) -> Money {
+        return Money(amount: amount, currency: "USD")
+    }
+    
+    static func franc(amount: Int) -> Money {
+        return Money(amount: amount, currency: "CHF")
+    }
+    
+    func currency() -> String {
+        return currencyUnit
+    }
+    
+    func toString() -> String {
+        return "\(amount) \(currencyUnit)"
+    }
+    
+    func times(multiplier: Int) -> Money {
+        return Money(amount: amount * multiplier, currency: currencyUnit)
+    }
+    
+    public static func == (lhs: Money, rhs: Money) -> Bool {
+        return lhs.amount == rhs.amount
+    }
+}
 
 class TDDTestTests: XCTestCase {
 
@@ -19,16 +63,26 @@ class TDDTestTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    func testMultiplication() {
+        let five = Money.dollar(amount: 5)
+        XCTAssertEqual(Money.dollar(amount: 10), five.times(multiplier: 2))
+        XCTAssertEqual(Money.dollar(amount: 15), five.times(multiplier: 3))
+    }
+    
+    func testFrancMultiplication() {
+        let five = Money.franc(amount: 5)
+        XCTAssertEqual(Money.franc(amount: 10), five.times(multiplier: 2))
+        XCTAssertEqual(Money.franc(amount: 15), five.times(multiplier: 3))
     }
 
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
+    func testEquality() {
+        XCTAssertTrue(Money.dollar(amount: 5).equals(Money.dollar(amount: 5)))
+        XCTAssertFalse(Money.dollar(amount: 5).equals(Money.dollar(amount: 6)))
+        XCTAssertFalse(Money.franc(amount: 5).equals(Money.dollar(amount: 5)))
     }
-
+    
+    func testCurrency() {
+        XCTAssertEqual("USD", Money.dollar(amount: 1).currency())
+        XCTAssertEqual("CHF", Money.franc(amount: 1).currency())
+    }
 }
