@@ -9,12 +9,22 @@
 import XCTest
 @testable import TDDTest
 
+protocol Expression {
+    
+}
+
 protocol MoneyProtocol {
     func currency() -> String
     func times(multiplier: Int) -> Money
 }
 
-public class Money: Equatable {
+public class Bank {
+    func reduce(source: Expression, to: String) -> Money {
+        return Money.dollar(amount: 10)
+    }
+}
+
+public class Money: Equatable, Expression {
     fileprivate var currencyUnit: String = ""
     fileprivate var amount: Int = 0
     
@@ -46,6 +56,10 @@ public class Money: Equatable {
     
     func times(multiplier: Int) -> Money {
         return Money(amount: amount * multiplier, currency: currencyUnit)
+    }
+    
+    func plus(addend: Money) -> Expression {
+        return Money(amount: amount + addend.amount, currency: currencyUnit)
     }
     
     public static func == (lhs: Money, rhs: Money) -> Bool {
@@ -84,5 +98,16 @@ class TDDTestTests: XCTestCase {
     func testCurrency() {
         XCTAssertEqual("USD", Money.dollar(amount: 1).currency())
         XCTAssertEqual("CHF", Money.franc(amount: 1).currency())
+    }
+    
+    func testSimpleAddition() {
+        // $5 만들기
+        let five = Money.dollar(amount: 5)
+        // 두 Money의 합은 Expression이어야한다
+        let sum: Expression = five.plus(addend: five)
+        // 간단한 예제에서 Bank가 할 일은 없다
+        let bank = Bank()
+        let reduced: Money = bank.reduce(source: sum, to: "USD")
+        XCTAssertEqual(Money.dollar(amount: 10), reduced)
     }
 }
