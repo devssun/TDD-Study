@@ -10,7 +10,7 @@ import XCTest
 @testable import TDDTest
 
 protocol Expression {
-    
+    func reduce(to: String) -> Money
 }
 
 protocol MoneyProtocol {
@@ -20,7 +20,22 @@ protocol MoneyProtocol {
 
 public class Bank {
     func reduce(source: Expression, to: String) -> Money {
-        return Money.dollar(amount: 10)
+        return source.reduce(to: to)
+    }
+}
+
+public class Sum: Expression {
+    let augend: Money!
+    let addend: Money!
+    
+    init(augend: Money, addend: Money) {
+        self.augend = augend
+        self.addend = addend
+    }
+    
+    func reduce(to: String) -> Money {
+        let amount = augend.amount + addend.amount
+        return Money(amount: amount, currency: to)
     }
 }
 
@@ -59,7 +74,11 @@ public class Money: Equatable, Expression {
     }
     
     func plus(addend: Money) -> Expression {
-        return Money(amount: amount + addend.amount, currency: currencyUnit)
+        return Sum(augend: self, addend: addend)
+    }
+    
+    func reduce(to: String) -> Money {
+        return self
     }
     
     public static func == (lhs: Money, rhs: Money) -> Bool {
@@ -109,5 +128,26 @@ class TDDTestTests: XCTestCase {
         let bank = Bank()
         let reduced: Money = bank.reduce(source: sum, to: "USD")
         XCTAssertEqual(Money.dollar(amount: 10), reduced)
+    }
+    
+    func testPlusReturnsSum() {
+        let five = Money.dollar(amount: 5)
+        let result: Expression = five.plus(addend: five)
+        let sum: Sum = result as! Sum
+        XCTAssertEqual(five, sum.augend)
+        XCTAssertEqual(five, sum.addend)
+    }
+    
+    func testReduceSum() {
+        let sum = Sum(augend: Money.dollar(amount: 3), addend: Money.dollar(amount: 4))
+        let bank = Bank()
+        let result = bank.reduce(source: sum, to: "USD")
+        XCTAssertEqual(Money.dollar(amount: 7), result)
+    }
+    
+    func testReduceMoney() {
+        let bank = Bank()
+        let result = bank.reduce(source: Money.dollar(amount: 1), to: "USD")
+        XCTAssertEqual(Money.dollar(amount: 1), result)
     }
 }
